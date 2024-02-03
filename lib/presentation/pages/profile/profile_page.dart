@@ -1,14 +1,12 @@
-import 'dart:io';
-
-import 'package:auto_route/auto_route.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rtu_mirea_app/domain/entities/user.dart';
+import 'package:rtu_mirea_app/presentation/bloc/notification_preferences/notification_preferences_bloc.dart';
 import 'package:rtu_mirea_app/presentation/bloc/user_bloc/user_bloc.dart';
 import 'package:rtu_mirea_app/presentation/widgets/buttons/colorful_button.dart';
-import 'package:rtu_mirea_app/presentation/widgets/buttons/icon_button.dart';
 import 'package:rtu_mirea_app/presentation/widgets/buttons/settings_button.dart';
-import 'package:rtu_mirea_app/presentation/core/routes/routes.gr.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
 import '../../bloc/announces_bloc/announces_bloc.dart';
@@ -17,21 +15,23 @@ import '../../widgets/container_label.dart';
 import 'package:rtu_mirea_app/presentation/typography.dart';
 import 'package:rtu_mirea_app/presentation/theme.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Профиль"),
+        actions: [
+          IconButton(
+            onPressed: () => launchUrlString('https://lk.mirea.ru'),
+            icon: Image.asset(
+              'assets/images/logo.png',
+            ),
+          ),
+        ],
       ),
-      backgroundColor: AppTheme.colors.background01,
       body: SafeArea(
         bottom: false,
         child: LayoutBuilder(
@@ -39,21 +39,40 @@ class _ProfilePageState extends State<ProfilePage> {
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: BlocBuilder<UserBloc, UserState>(
+                child: BlocConsumer<UserBloc, UserState>(
+                  listener: (context, state) {
+                    if (state.status == UserStatus.authorizeError) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Ошибка авторизации. Попробуйте еще раз.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  bloc: context.read<UserBloc>()..add(Started()),
                   builder: (context, state) {
-                    return state.map(
-                      unauthorized: (_) => const _InitialProfileStatePage(),
-                      loading: (_) => ConstrainedBox(
+                    if (state.status == UserStatus.unauthorized && state.user == null) {
+                      return const _InitialProfileStatePage();
+                    } else if (state.status == UserStatus.loading || state.status == UserStatus.initial) {
+                      return ConstrainedBox(
                         constraints: BoxConstraints(
                           minHeight: viewportConstraints.maxHeight,
                         ),
                         child: const Center(
                           child: CircularProgressIndicator(),
                         ),
-                      ),
-                      logInError: (st) => const _InitialProfileStatePage(),
-                      logInSuccess: (st) => _UserLoggedInView(user: st.user),
-                    );
+                      );
+                    } else if (state.user != null) {
+                      BlocProvider.of<NotificationPreferencesBloc>(context).add(
+                        InitialCategoriesPreferencesRequested(
+                            group: UserBloc.getActiveStudent(state.user!).academicGroup),
+                      );
+                      return _UserLoggedInView(user: state.user!);
+                    } else {
+                      return const _InitialProfileStatePage();
+                    }
                   },
                 ),
               ),
@@ -77,8 +96,7 @@ class _UserLoggedInView extends StatelessWidget {
       children: [
         CircleAvatar(
           radius: 68,
-          backgroundImage:
-              Image.network('https://lk.mirea.ru${user.photoUrl}').image,
+          backgroundImage: Image.network('https://lk.mirea.ru${user.photoUrl}').image,
         ),
         Padding(
           padding: const EdgeInsets.only(top: 13, bottom: 4),
@@ -87,13 +105,10 @@ class _UserLoggedInView extends StatelessWidget {
             style: AppTextStyle.h5,
           ),
         ),
-        ShaderMask(
-          shaderCallback: (bounds) => AppTheme.colors.gradient07.createShader(
-            Rect.fromLTWH(0, 0, bounds.width, bounds.height),
-          ),
-          child: Text(
-            user.login,
-            style: AppTextStyle.titleS,
+        Text(
+          user.login,
+          style: AppTextStyle.titleS.copyWith(
+            color: AdaptiveTheme.of(context).mode.isDark ? AppTheme.colors.colorful04 : AppTheme.colors.primary,
           ),
         ),
         const SizedBox(height: 12),
@@ -101,89 +116,46 @@ class _UserLoggedInView extends StatelessWidget {
           TextOutlinedButton(
             width: 160,
             content: "Профиль",
-            onPressed: () => context.router.push(
-              ProfileDetailRoute(user: user),
-            ),
-          ),
-          const SizedBox(width: 12),
-          SizedBox(
-            width: 146,
-            height: 45,
-            child: SocialIconButton.asset(
-              assetPath: 'assets/icons/gerb.ico',
-              onClick: () {
-                launchUrlString("https://lk.mirea.ru/auth",
-                    mode: LaunchMode.externalApplication);
-              },
-              text: "Вход в ЛКС",
-            ),
+            onPressed: () => context.go('/profile/details', extra: user),
           ),
         ]),
-
-        const SizedBox(height: 40),
+        const SizedBox(height: 24),
         const ContainerLabel(label: "Информация"),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
         SettingsButton(
             text: 'Объявления',
             icon: Icons.message_rounded,
             onClick: () {
               context.read<AnnouncesBloc>().add(const LoadAnnounces());
-              context.router.push(
-                const ProfileAnnouncesRoute(),
-              );
+              context.go('/profile/announces');
             }),
-        // const SizedBox(height: 8),
-        // SettingsButton(
-        //     text: 'Адреса',
-        //     icon: Icons.map_rounded,
-        //     onClick: () {}),
         const SizedBox(height: 8),
         SettingsButton(
           text: 'Преподаватели',
           icon: Icons.people_alt_rounded,
-          onClick: () => context.router.push(const ProfileLectrosRoute()),
+          onClick: () => context.go('/profile/lectors'),
         ),
         const SizedBox(height: 8),
         SettingsButton(
           text: 'Посещения',
           icon: Icons.access_time_rounded,
-          onClick: () => context.router.push(const ProfileAttendanceRoute()),
+          onClick: () => context.go('/profile/attendance'),
         ),
         const SizedBox(height: 8),
         SettingsButton(
-            text: 'Зачетная книжка',
-            icon: Icons.menu_book_rounded,
-            onClick: () => context.router.push(const ProfileScoresRoute())),
+            text: 'Зачетная книжка', icon: Icons.menu_book_rounded, onClick: () => context.go('/profile/scores')),
         const SizedBox(height: 8),
         SettingsButton(
           text: 'О приложении',
           icon: Icons.apps_rounded,
-          onClick: () => context.router.push(const AboutAppRoute()),
+          onClick: () => context.go('/profile/about'),
         ),
-
-        // Display only for android devices because of
-        // NFC support only for android
-        if (Platform.isAndroid) ...[
-          const SizedBox(height: 8),
-          SettingsButton(
-            text: 'NFC пропуск',
-            icon: Icons.nfc_rounded,
-            onClick: () => context.router.push(const ProfileNfcPassRoute()),
-          ),
-        ],
-
         const SizedBox(height: 8),
-        SettingsButton(
-            text: 'Настройки',
-            icon: Icons.settings_rounded,
-            onClick: () => {
-                  context.router.push(const ProfileSettingsRoute()),
-                }),
+        SettingsButton(text: 'Настройки', icon: Icons.settings_rounded, onClick: () => context.go('/profile/settings')),
         const SizedBox(height: 8),
         ColorfulButton(
             text: 'Выйти',
-            onClick: () =>
-                context.read<UserBloc>().add(const UserEvent.logOut()),
+            onClick: () => context.read<UserBloc>().add(LogOutEvent()),
             backgroundColor: AppTheme.colors.colorful07),
       ],
     );
@@ -197,38 +169,43 @@ class _InitialProfileStatePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 24, 0, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Привет! 👋',
+                style: AppTextStyle.h4,
+                textAlign: TextAlign.left,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Войдите в аккаунт и быстрый доступ к своему Личному Кабинету Студента МИРЭА. Это безопасно!',
+                style: AppTextStyle.body,
+                textAlign: TextAlign.left,
+              ),
+            ],
+          ),
+        ),
         ColorfulButton(
-            text: 'Войти',
-            onClick: () {
-              // Мы используем oauth2 для авторизации, поэтому
-              // вместо того, чтобы открывать страницу с логином и паролем,
-              // мы просто вызываем событие авторизации, которое откроет
-              // страницу авторизации в браузере.
-              context.read<UserBloc>().add(const UserEvent.logIn());
-
-              // Страница с вводом логина и пароля:
-              // context.router.push(const LoginRoute());
-
-              // Страница с ошибкой:
-              // showModalBottomSheet(
-              //   context: context,
-              //   isScrollControlled: true,
-              //   backgroundColor: Colors.transparent,
-              //   builder: (context) => const BottomErrorInfo(),
-              // );
-            },
-            backgroundColor: AppTheme.colors.colorful03),
+          text: 'Войти',
+          onClick: () {
+            context.read<UserBloc>().add(LogInEvent());
+          },
+          backgroundColor: AppTheme.colors.colorful03,
+        ),
         const SizedBox(height: 8),
         SettingsButton(
           text: 'О приложении',
           icon: Icons.apps_rounded,
-          onClick: () => context.router.push(const AboutAppRoute()),
+          onClick: () => context.go('/profile/about'),
         ),
         const SizedBox(height: 8),
         SettingsButton(
           text: 'Настройки',
           icon: Icons.settings_rounded,
-          onClick: () => context.router.push(const ProfileSettingsRoute()),
+          onClick: () => context.go('/profile/settings'),
         ),
       ],
     );

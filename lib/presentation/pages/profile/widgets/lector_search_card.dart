@@ -15,7 +15,7 @@ class LectorSearchCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       width: double.infinity,
-      color: AppTheme.colors.background02,
+      color: AppTheme.colorsOf(context).background02,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -28,21 +28,18 @@ class LectorSearchCard extends StatelessWidget {
             height: 30,
             child: TextButton(
               style: ButtonStyle(
-                padding: MaterialStateProperty.all<EdgeInsets>(
-                    const EdgeInsets.all(0)),
+                padding: MaterialStateProperty.all<EdgeInsets>(const EdgeInsets.all(0)),
               ),
               onLongPress: () {
                 Clipboard.setData(ClipboardData(text: employee.email));
-                ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Email адрес скопирован!')));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Email адрес скопирован!')));
               },
               onPressed: () {
                 launchUrlString("mailto:${employee.email}?subject=&body=");
               },
               child: Text(
                 employee.email,
-                style: AppTextStyle.bodyRegular
-                    .copyWith(color: AppTheme.colors.colorful02),
+                style: AppTextStyle.bodyRegular.copyWith(color: AppTheme.colorsOf(context).colorful02),
               ),
             ),
           ),

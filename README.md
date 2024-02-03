@@ -1,4 +1,5 @@
 # rtu-mirea-app
+[![Codemagic build status](https://api.codemagic.io/apps/650ddff0d58153d281f375fe/650ddff0d58153d281f375fd/status_badge.svg)](https://codemagic.io/apps/650ddff0d58153d281f375fe/650ddff0d58153d281f375fd/latest_build)
 
 Это мобильное приложение с полностью открытым исходным кодом для студентов и преподавателей РТУ МИРЭА.
 <p float="left">
@@ -23,7 +24,7 @@
 </p>
 
 # Самостоятельная сборка проекта
-1. Установите стабильную версию Flutter 2.8.1 для своей операционной системы, используя [руководство на странице документации](https://docs.flutter.dev/get-started/install). 
+1. Установите стабильную версию Flutter для своей операционной системы, используя [руководство на странице документации](https://docs.flutter.dev/get-started/install). 
 2. Установить зависимости пакетов:
 ```
 flutter pub get
@@ -57,9 +58,9 @@ flutter packages pub run build_runner build --delete-conflicting-outputs
 
 ## Конфигурация Firebase Analytics
 1. Зарегистрируйте приложение в [Firebase](https://console.firebase.google.com/).
-1. Выполните шаги для генерации `firebase_options.dart` файла с помощью [FlutterFire CLI](https://firebase.flutter.dev/docs/cli).
-2. Firebase Analytics для Android не поддерживает Dart-only конфигурацию. Как только ваше приложение для Android будет зарегистрировано в Firebase, загрузите файл конфигурации с консоли Firebase (файл называется `google-services.json`). Добавьте этот файл в каталог `android/app`.
-3. Проект готов для использования с Firebase Analytics и Crashlytics.
+2. Выполните шаги для генерации `firebase_options.dart` файла с помощью [FlutterFire CLI](https://firebase.flutter.dev/docs/cli).
+3. Firebase Analytics для Android не поддерживает Dart-only конфигурацию. Как только ваше приложение для Android будет зарегистрировано в Firebase, загрузите файл конфигурации с консоли Firebase (файл называется `google-services.json`). Добавьте этот файл в каталог `android/app`.
+4. Проект готов для использования с Firebase Analytics и Crashlytics.
 
 ## Переменные окружения
 Приложение использует переменные среды времени компиляции для хранения конфиденциальных данных, таких как ключи API и токены. 
@@ -95,8 +96,18 @@ flutter run --dart-define=SENTRY_DSN=YOUR_DSN --dart-define=LK_CLIENT_ID=YOUR_CL
 # Установка
 Следить за актуальностью приложения и скачать готовый билд вы можете на [странице релизов](https://github.com/Ninja-Official/rtu-mirea-mobile/releases) этого репозитория.
 
-# Примите участие
+# Ваше участие
 Это приложение и все относящиеся к нему сервисы являются **100% бесплатными** и **Open Source** продуктами. Мы с огромным удовольствием примем любые ваши предложения и сообщения, а также мы рады любому вашему участию в проекте! Перед тем как принять участие в развитии проекта:
 1. Ознакомьтесь с нашим [CONTRIBUTING.MD](https://github.com/Ninja-Official/rtu-mirea-mobile/blob/master/CONTRIBUTING.md), в котором описано то, как должны вести себя участники проекта.
 2. Уважайте других участников, обсуждайте идеи, а не личности, ознакомьтесь с [кодексом поведения](https://github.com/Ninja-Official/rtu-mirea-mobile/blob/master/CODE_OF_CONDUCT.md).
 3. Не знаете, над чем вы хотите работать? Ознакомьтесь с нашей [дорожной картой](https://github.com/Ninja-Official/rtu-mirea-mobile/projects/1).
+
+### Разработчики
+
+<a href="https://github.com/mirea-ninja/rtu-mirea-mobile/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=mirea-ninja/rtu-mirea-mobile" />
+</a>
+
+### Благодарности
+* Спасибо **Ивану Лаптеву**, заведующему [RTUITLab](https://rtuitlab.dev/), за его неоценимый вклад в развитие этого проекта
+* Спасибо **Анне Степушкиной**, заместителю председателя по работе со студентами ИПТИП, за её невероятную помощь в разработке карт зданий для нашего приложения

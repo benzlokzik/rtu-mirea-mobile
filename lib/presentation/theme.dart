@@ -1,6 +1,5 @@
-import 'package:auto_route/auto_route.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:rtu_mirea_app/presentation/colors.dart';
 import 'package:rtu_mirea_app/presentation/typography.dart';
 
@@ -13,14 +12,10 @@ enum AppThemeType { light, dark, black }
 /// To change the theme, use [AppTheme.changeThemeType] method and pass the new
 /// theme type ([AppThemeType]) as an argument.
 class AppTheme {
+  static ThemeColors colors = ThemeColors();
   static ThemeColors darkThemeColors = ThemeColors();
   static ThemeColors lightThemeColors = LightThemeColors();
   static ThemeColors blackThemeColors = AmoledDarkThemeColors();
-
-  static AppThemeType defaultThemeType = AppThemeType.dark;
-  static ThemeMode defaultThemeMode = ThemeMode.dark;
-
-  static ThemeData theme = AppTheme.getDataByThemeType();
 
   static final darkTheme = ThemeData.dark().copyWith(
     textTheme: ThemeData.dark().textTheme.apply(
@@ -29,26 +24,71 @@ class AppTheme {
         ),
     scaffoldBackgroundColor: darkThemeColors.background01,
     appBarTheme: AppBarTheme(
+      surfaceTintColor: Colors.transparent,
       titleSpacing: 24,
       backgroundColor: darkThemeColors.background01,
       shadowColor: Colors.transparent,
-      titleTextStyle:
-          AppTextStyle.title.copyWith(color: darkThemeColors.active),
+      titleTextStyle: AppTextStyle.title.copyWith(color: darkThemeColors.active),
       iconTheme: IconThemeData(color: blackThemeColors.active),
     ),
-    bottomNavigationBarTheme:
-        ThemeData.dark().bottomNavigationBarTheme.copyWith(
-              type: BottomNavigationBarType.shifting,
-              backgroundColor: darkThemeColors.background03,
-              selectedItemColor: darkThemeColors.active,
-              unselectedItemColor: darkThemeColors.deactive,
-              selectedLabelStyle: AppTextStyle.captionL,
-              unselectedLabelStyle: AppTextStyle.captionS,
-            ),
-    pageTransitionsTheme: const PageTransitionsTheme(builders: {
-      TargetPlatform.iOS: NoShadowCupertinoPageTransitionsBuilder(),
-      TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-    }),
+    chipTheme: ChipThemeData(
+      backgroundColor: darkThemeColors.background02,
+      disabledColor: darkThemeColors.background02,
+      selectedColor: darkThemeColors.background02,
+      secondarySelectedColor: darkThemeColors.background02,
+      padding: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      labelStyle: AppTextStyle.chip.copyWith(color: darkThemeColors.active),
+      secondaryLabelStyle: AppTextStyle.chip.copyWith(color: darkThemeColors.active),
+      brightness: Brightness.dark,
+    ),
+    cardTheme: CardTheme(
+      color: darkThemeColors.background03,
+      elevation: 4,
+      shadowColor: darkThemeColors.background02.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
+    bottomNavigationBarTheme: ThemeData.dark().bottomNavigationBarTheme.copyWith(
+          type: BottomNavigationBarType.shifting,
+          backgroundColor: darkThemeColors.background01,
+          selectedItemColor: darkThemeColors.active,
+          unselectedItemColor: darkThemeColors.deactive,
+          selectedLabelStyle: AppTextStyle.captionL,
+          unselectedLabelStyle: AppTextStyle.captionS,
+        ),
+    listTileTheme: ListTileThemeData(
+      tileColor: Colors.transparent,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      leadingAndTrailingTextStyle: AppTextStyle.chip.copyWith(
+        color: AppTheme.colors.active,
+      ),
+      titleTextStyle: AppTextStyle.chip.copyWith(
+        color: AppTheme.colors.deactive,
+      ),
+      visualDensity: const VisualDensity(vertical: 4),
+      subtitleTextStyle: AppTextStyle.titleM.copyWith(
+        color: darkThemeColors.active,
+      ),
+    ),
+    dividerTheme: DividerThemeData(
+      color: darkThemeColors.background02,
+      thickness: 0.5,
+      space: 0,
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: darkThemeColors.background02,
+      contentTextStyle: AppTextStyle.bodyBold.copyWith(
+        color: darkThemeColors.active,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      insetPadding: const EdgeInsets.all(16),
+    ),
     colorScheme: ColorScheme(
       background: darkThemeColors.background01,
       brightness: Brightness.dark,
@@ -61,6 +101,7 @@ class AppTheme {
       onPrimary: lightThemeColors.white,
       onSecondary: darkThemeColors.active,
       error: darkThemeColors.colorful07,
+      surfaceTint: Colors.transparent,
     ),
   );
 
@@ -71,26 +112,72 @@ class AppTheme {
         ),
     scaffoldBackgroundColor: lightThemeColors.background01,
     appBarTheme: AppBarTheme(
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
       titleSpacing: 24,
       backgroundColor: lightThemeColors.background01,
       shadowColor: Colors.transparent,
-      titleTextStyle:
-          AppTextStyle.title.copyWith(color: lightThemeColors.active),
+      titleTextStyle: AppTextStyle.title.copyWith(color: lightThemeColors.active),
       iconTheme: IconThemeData(color: lightThemeColors.active),
     ),
-    bottomNavigationBarTheme:
-        ThemeData.light().bottomNavigationBarTheme.copyWith(
-              type: BottomNavigationBarType.shifting,
-              backgroundColor: lightThemeColors.background03,
-              selectedItemColor: lightThemeColors.active,
-              unselectedItemColor: lightThemeColors.deactive,
-              selectedLabelStyle: AppTextStyle.captionL,
-              unselectedLabelStyle: AppTextStyle.captionS,
-            ),
-    pageTransitionsTheme: const PageTransitionsTheme(builders: {
-      TargetPlatform.iOS: NoShadowCupertinoPageTransitionsBuilder(),
-      TargetPlatform.android: FadeUpwardsPageTransitionsBuilder(),
-    }),
+    bottomNavigationBarTheme: ThemeData.light().bottomNavigationBarTheme.copyWith(
+          type: BottomNavigationBarType.shifting,
+          backgroundColor: lightThemeColors.background03,
+          selectedItemColor: lightThemeColors.active,
+          unselectedItemColor: lightThemeColors.deactive,
+          selectedLabelStyle: AppTextStyle.captionL,
+          unselectedLabelStyle: AppTextStyle.captionS,
+        ),
+    chipTheme: ChipThemeData(
+      backgroundColor: lightThemeColors.background02,
+      disabledColor: lightThemeColors.background02,
+      selectedColor: lightThemeColors.background02,
+      secondarySelectedColor: lightThemeColors.background02,
+      padding: const EdgeInsets.all(8),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      labelStyle: AppTextStyle.chip.copyWith(color: lightThemeColors.active),
+      secondaryLabelStyle: AppTextStyle.chip.copyWith(color: lightThemeColors.active),
+      brightness: Brightness.light,
+    ),
+    listTileTheme: ListTileThemeData(
+      tileColor: Colors.transparent,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24),
+      leadingAndTrailingTextStyle: AppTextStyle.chip.copyWith(
+        color: AppTheme.colors.active,
+      ),
+      titleTextStyle: AppTextStyle.chip.copyWith(
+        color: AppTheme.colors.deactive,
+      ),
+      visualDensity: const VisualDensity(vertical: 4),
+      subtitleTextStyle: AppTextStyle.titleM.copyWith(
+        color: lightThemeColors.active,
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: lightThemeColors.background02,
+      contentTextStyle: AppTextStyle.bodyBold.copyWith(
+        color: lightThemeColors.active,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      insetPadding: const EdgeInsets.all(16),
+    ),
+    dividerTheme: DividerThemeData(
+      color: lightThemeColors.deactiveDarker.withOpacity(0.25),
+      thickness: 0.5,
+      space: 0,
+    ),
+    cardTheme: CardTheme(
+      color: lightThemeColors.background02,
+      elevation: 4,
+      shadowColor: lightThemeColors.background02.withOpacity(0.1),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+    ),
     colorScheme: ColorScheme(
       background: lightThemeColors.background01,
       brightness: Brightness.light,
@@ -103,65 +190,25 @@ class AppTheme {
       onPrimary: lightThemeColors.white,
       onSecondary: lightThemeColors.active,
       error: lightThemeColors.colorful07,
+      surfaceTint: Colors.transparent,
     ),
   );
 
-  static ThemeData getDataByThemeType({AppThemeType? themeType}) {
-    themeType ??= defaultThemeType;
+  static ThemeColors colorsOf(BuildContext context) {
+    final theme = AdaptiveTheme.of(context).mode;
 
-    switch (themeType) {
-      case AppThemeType.light:
-        return lightTheme;
-      case AppThemeType.dark:
-        return darkTheme;
-      default:
-        return darkTheme;
+    switch (theme) {
+      case AdaptiveThemeMode.dark:
+        return darkThemeColors;
+      case AdaptiveThemeMode.light:
+        return lightThemeColors;
+
+      case AdaptiveThemeMode.system:
+        if (MediaQuery.of(context).platformBrightness == Brightness.dark) {
+          return darkThemeColors;
+        } else {
+          return lightThemeColors;
+        }
     }
   }
-
-  static ThemeMode getThemeModeByType({AppThemeType? themeType}) {
-    themeType ??= defaultThemeType;
-
-    switch (themeType) {
-      case AppThemeType.light:
-        return ThemeMode.light;
-      case AppThemeType.black:
-        return ThemeMode.dark;
-      default:
-        return ThemeMode.dark;
-    }
-  }
-
-  static void changeThemeType(AppThemeType? themeType) {
-    defaultThemeType = themeType ?? AppThemeType.light;
-    defaultThemeMode = getThemeModeByType(themeType: defaultThemeType);
-    theme = AppTheme.getDataByThemeType();
-
-    // deleting the system status bar color and updating navigation bar color
-    // overlay
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        systemNavigationBarColor: AppTheme.colors.background01));
-  }
-
-  static ThemeColors getColorsByMode({AppThemeType? themeType}) {
-    themeType ??= defaultThemeType;
-
-    switch (themeType) {
-      case AppThemeType.light:
-        return LightThemeColors();
-      case AppThemeType.black:
-        return AmoledDarkThemeColors();
-      default:
-        return ThemeColors();
-    }
-  }
-
-  /// Returns the current theme data. If the theme is changed, the data will be
-  /// updated.
-  static ThemeMode get themeMode => getThemeModeByType();
-
-  /// Returns the current theme colors. If the theme is changed, the colors
-  /// will be updated.
-  static ThemeColors get colors => getColorsByMode();
 }

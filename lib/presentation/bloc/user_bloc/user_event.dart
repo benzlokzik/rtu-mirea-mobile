@@ -1,9 +1,34 @@
 part of 'user_bloc.dart';
 
-@freezed
-class UserEvent with _$UserEvent {
-  const factory UserEvent.started() = _Started;
-  const factory UserEvent.logIn() = _LogIn;
-  const factory UserEvent.logOut() = _LogOut;
-  const factory UserEvent.getUserData() = _GetUserData;
+abstract class UserEvent extends Equatable {
+  const UserEvent();
+}
+
+class Started extends UserEvent {
+  @override
+  List<Object?> get props => [];
+}
+
+class LogInEvent extends UserEvent with AnalyticsEventMixin {
+  @override
+  AnalyticsEvent get event => const AnalyticsEvent('LogIn');
+}
+
+class LogOutEvent extends UserEvent with AnalyticsEventMixin {
+  @override
+  AnalyticsEvent get event => const AnalyticsEvent('LogOut');
+}
+
+class GetUserDataEvent extends UserEvent with AnalyticsEventMixin {
+  @override
+  AnalyticsEvent get event => const AnalyticsEvent('GetUserData');
+}
+
+class SetAuthenticatedData extends UserEvent {
+  final User user;
+
+  const SetAuthenticatedData({required this.user});
+
+  @override
+  List<Object?> get props => [user];
 }

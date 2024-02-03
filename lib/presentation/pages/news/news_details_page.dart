@@ -3,9 +3,9 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:flutter_html_iframe/flutter_html_iframe.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:intl/intl.dart';
-import 'package:rtu_mirea_app/common/utils/strapi_utils.dart';
 import 'package:rtu_mirea_app/domain/entities/news_item.dart';
-import 'package:rtu_mirea_app/presentation/pages/news/widgets/tags_widgets.dart';
+import 'package:rtu_mirea_app/presentation/bloc/news_bloc/news_bloc.dart';
+import 'package:rtu_mirea_app/presentation/pages/news/widgets/tag_badge.dart';
 import 'package:rtu_mirea_app/presentation/widgets/images_horizontal_slider.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 import 'package:rtu_mirea_app/presentation/typography.dart';
@@ -18,7 +18,7 @@ class NewsDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.colors.background01,
+      backgroundColor: AppTheme.colorsOf(context).background01,
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return [
@@ -29,10 +29,7 @@ class NewsDetailsPage extends StatelessWidget {
                 children: <Widget>[
                   Positioned.fill(
                     child: Image.network(
-                      newsItem.images[0].formats != null
-                          ? StrapiUtils.getMediumImageUrl(
-                              newsItem.images[0].formats!)
-                          : newsItem.images[0].url,
+                      newsItem.images[0],
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -44,13 +41,12 @@ class NewsDetailsPage extends StatelessWidget {
         body: SafeArea(
           bottom: false,
           child: Container(
-            color: AppTheme.colors.background01,
+            color: AppTheme.colorsOf(context).background01,
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -67,14 +63,37 @@ class NewsDetailsPage extends StatelessWidget {
                           data: newsItem.text,
                           style: {
                             "body": Style(
-                                fontStyle: AppTextStyle.bodyRegular.fontStyle),
+                              color: AppTheme.colorsOf(context).active,
+                              fontStyle: AppTextStyle.bodyRegular
+                                  .copyWith(
+                                    color: AppTheme.colorsOf(context).active,
+                                  )
+                                  .fontStyle,
+                              fontSize: FontSize(16),
+                              lineHeight: const LineHeight(1.5),
+                            ),
+                            "a": Style(
+                              color: AppTheme.colorsOf(context).colorful02,
+                              fontStyle: AppTextStyle.bodyRegular.fontStyle,
+                              fontSize: FontSize(16),
+                              lineHeight: const LineHeight(1.5),
+                            ),
+                            "p": Style(
+                              color: AppTheme.colorsOf(context).active,
+                              fontStyle: AppTextStyle.bodyRegular
+                                  .copyWith(
+                                    color: AppTheme.colorsOf(context).active,
+                                  )
+                                  .fontStyle,
+                              fontSize: FontSize(16),
+                              lineHeight: const LineHeight(1.5),
+                            ),
                           },
-                          customRenders: {
-                            // iframeRenderer to display the YouTube video player
-                            iframeMatcher(): iframeRender(),
-                          },
-                          onLinkTap:
-                              (String? url, context, attributes, element) {
+                          extensions: const [
+                            // to display the YouTube video player
+                            IframeHtmlExtension(),
+                          ],
+                          onLinkTap: (String? url, Map<String, String> attributes, _) {
                             if (url != null) {
                               launchUrlString(url);
                             }
@@ -97,8 +116,7 @@ class NewsDetailsPage extends StatelessWidget {
 
 /// Tags and date of publication of the news
 class _NewsItemInfo extends StatelessWidget {
-  const _NewsItemInfo({Key? key, required this.tags, required this.date})
-      : super(key: key);
+  const _NewsItemInfo({Key? key, required this.tags, required this.date}) : super(key: key);
 
   final List<String> tags;
   final DateTime date;
@@ -107,16 +125,19 @@ class _NewsItemInfo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: tags.isNotEmpty
-          ? MainAxisAlignment.spaceBetween
-          : MainAxisAlignment.start,
+      mainAxisAlignment: NewsBloc.isTagsNotEmpty(tags) ? MainAxisAlignment.spaceBetween : MainAxisAlignment.start,
       children: [
-        tags.isNotEmpty
+        NewsBloc.isTagsNotEmpty(tags)
             ? Expanded(
-                child: Tags(
-                  isClickable: false,
-                  withIcon: true,
-                  tags: tags,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: List.generate(
+                    tags.length,
+                    (index) => TagBadge(
+                      tag: tags[index],
+                    ),
+                  ),
                 ),
               )
             : Container(),
@@ -132,14 +153,11 @@ class _NewsItemInfo extends StatelessWidget {
                 children: [
                   Text(
                     "Дата",
-                    style: AppTextStyle.body
-                        .copyWith(color: AppTheme.colors.deactive),
+                    style: AppTextStyle.body.copyWith(color: AppTheme.colorsOf(context).deactive),
                   ),
-                  const SizedBox(height: 4),
                   Text(
                     DateFormat.MMMd('ru_RU').format(date).toString(),
-                    style: AppTextStyle.titleM
-                        .copyWith(color: AppTheme.colors.colorful02),
+                    style: AppTextStyle.titleM.copyWith(color: AppTheme.colorsOf(context).colorful02),
                   ),
                 ],
               ),

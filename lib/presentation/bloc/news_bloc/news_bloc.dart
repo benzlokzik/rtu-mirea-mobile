@@ -1,4 +1,6 @@
+import 'package:analytics_repository/analytics_repository.dart';
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 import 'package:rtu_mirea_app/domain/entities/news_item.dart';
 import 'package:rtu_mirea_app/domain/usecases/get_news.dart';
@@ -12,73 +14,94 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
     required this.getNews,
     required this.getNewsTags,
   }) : super(NewsInitial()) {
-    on<NewsLoadEvent>(_onNewsLoadEvent);
+    on<NewsLoadEvent>(
+      _onNewsLoadEvent,
+
+      // This transformer allows process only the latest event and cancel
+      // previous event handlers
+      transformer: restartable(),
+    );
   }
+
+  final pageSize = 10;
 
   final GetNews getNews;
   final GetNewsTags getNewsTags;
 
-  bool _isFirstFetch = true;
-  int _offset = 0;
-  String? _selectedTag;
+  String? _getTagOrNull(String? tag) {
+    if (tag == null) return null;
+
+    if (tag == 'все') return null;
+
+    return tag;
+  }
+
+  static bool isTagsNotEmpty(List<String> tags) {
+    if (tags.isEmpty) {
+      return false;
+    } else if (tags.length == 1 && tags[0].isEmpty) {
+      return false;
+    }
+
+    return true;
+  }
 
   void _onNewsLoadEvent(NewsLoadEvent event, Emitter<NewsState> emit) async {
-    if (state is NewsLoading) return;
+    if (state is NewsLoaded) {
+      final st = state as NewsLoaded;
 
-    final bool refresh = event.refresh ?? false;
-    if (refresh) {
-      _isFirstFetch = true;
-      _offset = 0;
-    }
+      emit(NewsLoading(isFirstFetch: event.refresh == true));
 
-    List<String> tagsList = [];
-    List<NewsItem> oldNews = [];
+      final newsEither = await getNews(
+        GetNewsParams(
+          page: event.refresh == true ? 1 : st.page + 1,
+          pageSize: pageSize,
+          isImportant: event.isImportant,
+          tag: _getTagOrNull(event.tag),
+        ),
+      );
 
-    // True if the tag list failed to load
-    bool hasFetchError = false;
-
-    if (_isFirstFetch) {
-      emit(NewsLoading(oldNews: oldNews, isFirstFetch: true));
-      _isFirstFetch = false;
-      final tags = await getNewsTags();
-      tags.fold((failure) {
-        hasFetchError = true;
-      }, (r) {
-        tagsList = r;
-      });
+      newsEither.fold(
+        (l) => emit(NewsLoadError()),
+        (r) {
+          emit(NewsLoaded(
+            news: event.refresh == true ? r : (st.news + r).toSet().toList(),
+            tags: st.tags,
+            selectedTag: event.tag,
+            page: st.page + 1,
+          ));
+        },
+      );
     } else {
-      if (state is NewsLoaded) {
-        tagsList = (state as NewsLoaded).tags;
-        oldNews = (state as NewsLoaded).news;
-      }
-      emit(NewsLoading(oldNews: oldNews, isFirstFetch: false));
-    }
+      emit(NewsLoading(isFirstFetch: event.refresh == true));
 
-    if (hasFetchError) {
-      emit(NewsLoadError());
-      return;
-    }
+      final newsEither = await getNews(
+        GetNewsParams(
+          page: 1,
+          pageSize: pageSize,
+          isImportant: event.isImportant,
+          tag: _getTagOrNull(event.tag),
+        ),
+      );
 
-    if (event.tag == "все") {
-      _selectedTag = null;
-    } else {
-      if ((event.tag != null)) {
-        if (_selectedTag == null ||
-            (_selectedTag != null && event.tag != _selectedTag)) {
-          _selectedTag = event.tag;
-        }
-      }
-    }
+      final tagsEither = await getNewsTags();
 
-    final news = await getNews(GetNewsParams(
-        offset: _offset,
-        limit: 10,
-        isImportant: event.isImportant,
-        tag: _selectedTag));
-    emit(news.fold((failure) => NewsLoadError(), (r) {
-      List<NewsItem> newNews = List.from(oldNews)..addAll(r);
-      _offset += r.length;
-      return NewsLoaded(news: newNews, tags: tagsList);
-    }));
+      newsEither.fold(
+        (l) => emit(NewsLoadError()),
+        (r) {
+          tagsEither.fold(
+            (l) => emit(NewsLoadError()),
+            (tags) {
+              emit(NewsLoaded(
+                news: r,
+                tags: tags,
+                selectedTag: event.tag,
+                page: 1,
+              ));
+            },
+          );
+        },
+      );
+    }
   }
 }

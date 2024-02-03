@@ -37,7 +37,7 @@ class SocialIconButton extends StatelessWidget {
         shape: MaterialStateProperty.all<RoundedRectangleBorder>(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24.0),
-            side: BorderSide(color: AppTheme.colors.deactive, width: 1),
+            side: BorderSide(color: AppTheme.colorsOf(context).deactive, width: 1),
           ),
         ),
       ),
@@ -47,13 +47,10 @@ class SocialIconButton extends StatelessWidget {
               children: [
                 Text(
                   text!,
-                  style: AppTextStyle.buttonS
-                      .copyWith(color: AppTheme.colors.active),
+                  style: AppTextStyle.buttonS.copyWith(color: AppTheme.colorsOf(context).active),
                 ),
                 const SizedBox(width: 8),
-                assetPath != null
-                    ? Image.asset(assetPath!, height: 16, width: 16)
-                    : icon,
+                assetPath != null ? Image.asset(assetPath!, height: 16, width: 16) : icon,
               ],
             )
           : assetPath != null

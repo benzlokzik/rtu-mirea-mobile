@@ -1,8 +1,7 @@
-import 'package:auto_route/auto_route.dart';
+import 'package:adaptive_theme/adaptive_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:rtu_mirea_app/presentation/app_notifier.dart';
-import 'package:rtu_mirea_app/presentation/core/routes/routes.gr.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:go_router/go_router.dart';
 import 'package:rtu_mirea_app/presentation/theme.dart';
 import 'package:rtu_mirea_app/presentation/typography.dart';
 
@@ -11,29 +10,6 @@ class ProfileSettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final router = AutoRouter.of(context);
-
-    void rebuildRouterStack(StackRouter router) {
-      final tabsRouter = AutoTabsRouter.of(context);
-
-      // Rebuild current router stack
-      router.popUntil((route) => false);
-      router.replaceAll([const ProfileRoute()]);
-
-      final currentTabIndex = tabsRouter.activeIndex;
-
-      // Rebuild tabs router stack
-      for (var i = 0; i < tabsRouter.pageCount; i++) {
-        if (i == currentTabIndex) continue;
-        final route = tabsRouter.stackRouterOfIndex(i);
-        final routeName = route?.current.name;
-        if (routeName == null) continue;
-
-        route?.popUntil((route) => false);
-        route?.pushNamed(routeName);
-      }
-    }
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Настройки"),
@@ -45,7 +21,7 @@ class ProfileSettingsPage extends StatelessWidget {
             const SizedBox(height: 24),
             ListTile(
               title: Text("Тема", style: AppTextStyle.body),
-              leading: Icon(Icons.brightness_6, color: AppTheme.colors.active),
+              leading: Icon(FontAwesomeIcons.palette, color: AppTheme.colorsOf(context).active),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 showDialog(
@@ -53,44 +29,40 @@ class ProfileSettingsPage extends StatelessWidget {
                   builder: (context) => SimpleDialog(
                     title: Text("Выбор темы", style: AppTextStyle.titleS),
                     contentPadding: const EdgeInsets.all(16),
-                    backgroundColor: AppTheme.colors.background02,
+                    backgroundColor: AppTheme.colorsOf(context).background02,
                     elevation: 0,
                     children: [
-                      ListTile(
-                        title: Text("Светлая", style: AppTextStyle.body),
+                      _ListTileThemeItem(
+                        title: "Светлая",
+                        trailing: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.light
+                            ? Icon(Icons.check, color: AppTheme.colorsOf(context).active)
+                            : null,
                         onTap: () {
-                          context
-                              .read<AppNotifier>()
-                              .updateTheme(AppThemeType.light);
-                          // Close dialog
-                          Navigator.pop(context);
-                          rebuildRouterStack(router);
+                          AdaptiveTheme.of(context).setLight();
+                          context.pop();
                         },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        trailing:
-                            AppTheme.defaultThemeType == AppThemeType.light
-                                ? const Icon(Icons.check)
-                                : null,
                       ),
                       const SizedBox(height: 8),
-                      ListTile(
-                        title: Text("Тёмная", style: AppTextStyle.body),
-                        onTap: () {
-                          context
-                              .read<AppNotifier>()
-                              .updateTheme(AppThemeType.dark);
-                          // Close dialog
-                          Navigator.pop(context);
-                          rebuildRouterStack(router);
-                        },
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        trailing: AppTheme.defaultThemeType == AppThemeType.dark
-                            ? const Icon(Icons.check)
+                      _ListTileThemeItem(
+                        title: "Тёмная",
+                        trailing: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.dark
+                            ? Icon(Icons.check, color: AppTheme.colorsOf(context).active)
                             : null,
+                        onTap: () {
+                          AdaptiveTheme.of(context).setDark();
+                          context.pop();
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      _ListTileThemeItem(
+                        title: "Как в системе",
+                        trailing: AdaptiveTheme.of(context).mode == AdaptiveThemeMode.system
+                            ? Icon(Icons.check, color: AppTheme.colorsOf(context).active)
+                            : null,
+                        onTap: () {
+                          AdaptiveTheme.of(context).setSystem();
+                          context.pop();
+                        },
                       ),
                     ],
                   ),
@@ -98,9 +70,51 @@ class ProfileSettingsPage extends StatelessWidget {
               },
             ),
             const Divider(),
+            ListTile(
+              title: Text("Уведомления", style: AppTextStyle.body),
+              leading: Icon(Icons.notifications, color: AppTheme.colorsOf(context).active),
+              onTap: () {
+                context.go("/profile/settings/notifications");
+              },
+            ),
+            const Divider(),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ListTileThemeItem extends StatelessWidget {
+  const _ListTileThemeItem({
+    Key? key,
+    required this.title,
+    required this.onTap,
+    this.trailing,
+  }) : super(key: key);
+
+  final String title;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(
+        title,
+        style: AppTextStyle.body.copyWith(
+          color: AppTheme.colorsOf(context).active,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+      dense: true,
+      onTap: () {
+        onTap();
+      },
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      trailing: trailing,
     );
   }
 }
